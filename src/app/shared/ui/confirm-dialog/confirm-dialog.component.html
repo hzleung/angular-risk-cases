@@ -1,0 +1,10 @@
+@if (open()) {
+<div class="dialog-background">
+  <div class="dialog">
+    <h3>{{ title() }}</h3>
+    <p>{{ message() }}</p>
+    <button type="button" (click)="onConfirm()">Confirm</button>
+    <button type="button" (click)="onCancel()">Cancel</button>
+  </div>
+</div>
+}

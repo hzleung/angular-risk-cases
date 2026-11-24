@@ -1,59 +1,87 @@
-# AngularRiskCases
+# angular-risk-cases
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.30.
+An Angular risk-case list: a hands-on project for practicing Angular's
+new APIs, replicating a bank risk-and-compliance case-management scenario
+(list, search, detail, create). All data is mock data. No real business
+data is included.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Getting Started
 
 ```bash
-ng generate component component-name
+npm install
+npx tsc --noEmit -p tsconfig.app.json   # type check
+ng serve                                # open http://localhost:4200/
+npx ng test --watch=false               # unit tests
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Features
 
-```bash
-ng generate --help
+- List page `/`: Ag Grid renders the cases, the search box filters by title or ID
+- Detail page `/cases/:id`: loads one case by ID, shows "Case not found" when the ID does not exist
+- Create page `/cases/new`: Reactive Forms + a custom validator, submits only when the form is valid
+- Click any row in the table to navigate to that case's detail page
+
+## Angular Features Used
+
+- **Standalone components**: no NgModule, `standalone: true`
+- **Signals**: `signal` / `computed` / `input()` / `output()`, updated with `set()` under OnPush
+- **RxJS state streams**: search stream `valueChanges → startWith('') → debounceTime(300) → distinctUntilChanged() → switchMap() → takeUntilDestroyed()`; detail stream `paramMap → map → switchMap()`
+- **Dependency injection**: `@Injectable({ providedIn: 'root' })` + `inject()`, the Service only handles data fetching
+- **Routing**: `''` → list, `cases/new` → create, `cases/:id` → detail, `**` → fallback redirect; `cases/new` must come before `cases/:id`
+- **Reactive Forms**: `FormGroup` + `Validators` + a custom validator `forbiddenTitleValidator`, submits only when `form.valid` is true
+- **Change detection**: `ChangeDetectionStrategy.OnPush`, no method calls in templates, `columnDefs` as a readonly constant
+
+## Performance
+
+- Ag Grid virtual scrolling: only the visible rows are rendered for 2,000 rows
+- `columnDefs` is created only once, never rebuilt on each render
+- Search input is debounced by 300ms, `switchMap` cancels the previous request
+- OnPush + signal `set()` only refreshes the places that read the signal
+
+## React Mapping
+
+| Angular                | React                                                 |
+| ---------------------- | ----------------------------------------------------- |
+| `signal`               | `useState`                                            |
+| `computed`             | `useMemo`                                             |
+| `effect`               | `useEffect` (fetch data in `ngOnInit` + RxJS instead) |
+| `inject()`             | `useContext`                                          |
+| `input()` / `output()` | `props` / callback props `props.onX()`                |
+| `paramMap`             | `useParams()`                                         |
+| `router.navigate()`    | `useNavigate()`                                       |
+| `FormGroup`            | Controlled form + state managed by hand               |
+
+## Project Structure
+
+```
+src/app/
+  core/
+    models/case.model.ts        # Case / CaseStatus / RiskLevel
+    data/mock-cases.ts          # Mock data generated with a fixed seed
+    services/case.service.ts    # getCases / getCaseById, of + delay to simulate requests
+  features/
+    case-list/                  # List + search + Ag Grid + row-click navigation
+    case-detail/                # Detail, paramMap + switchMap
+    case-form/                  # Create, Reactive Forms + custom validator
+  shared/ui/
+    status-badge/               # Status badge, input()
+    search-input/               # Search box, output()
+    confirm-dialog/             # Confirm dialog, output() for confirm / cancel
 ```
 
-## Building
+## Tests
 
-To build the project run:
+- `case.service.spec.ts`: empty keyword returns all, keyword filtering, load one by ID
+- `case-list.component.spec.ts`: loads all on open, filters on keyword input, empty list for a non-existent keyword
+- `case-form.component.spec.ts`: initially invalid, title shorter than 4 chars is invalid, title containing a forbidden word is invalid, valid submit sets `submitted`, invalid submit leaves `submitted` as null
 
-```bash
-ng build
-```
+Angular 21 is zoneless by default, so `fakeAsync` does not work. Tests use
+`async / await` + `firstValueFrom` / `setTimeout` instead of `fakeAsync` + `tick`.
+Component tests that use `routerLink` need `provideRouter([])`, otherwise they fail with NG0201.
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Notes
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- All data is mock data generated by `generateMockCases()` with a fixed seed.
+  No real business data or internal code is included.
+- Ag Grid 36 requires `ModuleRegistry.registerModules([AllCommunityModule])`
+  before any grid is created, otherwise the grid is blank and `tsc` will not catch it.

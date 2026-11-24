@@ -1,0 +1,48 @@
+<div class="case-form">
+  <h2>Add Case</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="title">Title</label>
+      <input id="title" type="text" formControlName="title" placeholder="Please input some case..." />
+      @if ((titleControl.touched || titleControl.dirty) && titleControl.errors) {
+      @if (titleControl.hasError('required')) {
+      <p>Title is required!</p>
+      }
+      @if (titleControl.hasError('minLength')) {
+      <p>title length less than 4</p>
+      }
+      @if (titleControl.hasError('forbiddenTitle')) {
+      <p>There shouldn't show "test / demo</p>
+      }
+      }
+    </div>
+    <div>
+      <label for="status">Status</label>
+      <select id="status" formControlName="status">
+        <option value="pending">Pending</option>
+        <option value="pendingReview">Pending Review</option>
+        <option value="closed">closed</option>
+      </select>
+    </div>
+    <div>
+      <label for="riskLevel">Risk Level</label>
+      <select id="riskLevel" formControlName="riskLevel">
+        <option value="high">High</option>
+        <option value="middle">Middle</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div>
+      <label for="owner">Owner</label>
+      <input type="text" id="owner" formControlName="owner" placeholder="like: Kyle" />
+      @if (ownerControl.touched && ownerControl.hasError('required')) {
+      <p>owner is required.</p>
+      }
+    </div>
+    <button type="submit">Case Create</button>
+    <a routerLink="/">{{`\<- Back to list`}}</a>
+  </form>
+  @if (submitted(); as c) {
+  <p>Case Created: {{ c.id }} ({{c.title}})</p>
+  }
+</div>

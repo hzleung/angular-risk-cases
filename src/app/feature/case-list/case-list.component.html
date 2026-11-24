@@ -1,0 +1,14 @@
+<div class="case-list">
+  <h2>Risk Case List</h2>
+  <a routerLink="/cases/new">+ Add Case</a>
+  <input type="search" [formControl]="searchControl" placeholder="Search title or number" />
+  @if (loading()) {
+  <p>loading...</p>
+  }
+
+  @if (!loading() && cases().length === 0) {
+  <p>empty data</p>
+  }
+  <ag-grid-angular style="width: 100%; height: 500px;" [rowData]="cases()" [columnDefs]="columnDefs"
+    (rowClicked)="onRowClicked($event)" />
+</div>
