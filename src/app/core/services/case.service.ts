@@ -42,4 +42,13 @@ export class CaseService {
       map(list => list.find(c => c.id === id)),
     );
   }
+
+  getCaseLogs(id: string): Observable<string[]> {
+    const logs = [
+      `${id} created by Kyle`,
+      `${id} assigned to reviewer`,
+      `${id} status updated`,
+    ];
+    return of(logs).pipe(delay(200))
+  }
 }

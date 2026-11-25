@@ -14,6 +14,10 @@
   <dt>updateAt</dt>
   <dt>{{c.updateAt}}</dt>
 </dl>
+<h3>Audit Record</h3>
+@for (log of caseLogs(); track log) {
+<p>{{ log }}</p>
+}
 } @else {
 <p>empty case</p>
 <a routerLink="/">Back to list</a>

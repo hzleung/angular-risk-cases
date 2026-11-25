@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal 
 import { ActivatedRoute, RouterLink } from "@angular/router";
 import { CaseService } from "../../core/services/case.service";
 import type { Case } from "../../core/models/cases.model";
-import { distinctUntilChanged, map, of, switchMap, tap } from "rxjs";
+import { distinctUntilChanged, forkJoin, map, of, switchMap, tap } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { StatusBadgeComponent } from "../../shared/ui/status-badge/status-badge.component";
 
@@ -26,6 +26,8 @@ export class CaseDetailComponent implements OnInit {
   readonly caseDetail = signal<Case | undefined>(undefined);
   readonly loading = signal(true);
 
+  readonly caseLogs = signal<string[]>([]);
+
   ngOnInit(): void {
     this.route.paramMap.pipe(
       // paramMap 是“URL 参数的流”，每次URL里的 id 变了它就发一个新值
@@ -36,11 +38,15 @@ export class CaseDetailComponent implements OnInit {
       tap(() => this.loading.set(true)),
       // id 变了就取消上一次还没回来的请求，只留最新的一次
       // 没有 id 时直接返回 of(undefined)，不调 Service
-      switchMap(id => (id ? this.caseService.getCaseById(id) : of(undefined))),
+      switchMap(id => (id ? forkJoin({
+        detail: this.caseService.getCaseById(id),
+        logs: this.caseService.getCaseLogs(id)
+      }) : of({ detail: undefined, logs: [] as string[] }))),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
-      next: found => {
-        this.caseDetail.set(found);
+      next: ({ detail, logs }) => {
+        this.caseDetail.set(detail);
+        this.caseLogs.set(logs);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
