@@ -9,6 +9,12 @@
   @if (!loading() && cases().length === 0) {
   <p>empty data</p>
   }
+  @defer (on viewport) {
   <ag-grid-angular style="width: 100%; height: 500px;" [rowData]="cases()" [columnDefs]="columnDefs"
     (rowClicked)="onRowClicked($event)" />
+  } @placeholder {
+  <p>loading...</p>
+  } @loading {
+  <p>loading process...</p>
+  }
 </div>

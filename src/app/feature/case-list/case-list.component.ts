@@ -76,6 +76,7 @@ export class CaseListComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+
   }
 
   onRowClicked(event: RowClickedEvent<Case>): void {
